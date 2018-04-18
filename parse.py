@@ -18,4 +18,4 @@ def parse(filename):
   return out
 
 if __name__ == "__main__":
-    print(parse("C:/Users/domoa/Desktop/PS1/PS1/house_votes_84.data"))
+    print(parse("house_votes_84.data"))
