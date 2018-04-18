@@ -27,6 +27,7 @@ def testPruning():
     print "pruning test failed -- no tree returned."
 
 
+
 def testID3AndTest():
   trainData = [dict(a=1, b=0, c=0, Class=1), dict(a=1, b=1, c=0, Class=1), 
   dict(a=0, b=0, c=0, Class=0), dict(a=0, b=1, c=0, Class=1)]
@@ -59,9 +60,10 @@ def testPruningOnHouseData(inFile):
   withPruning = []
   withoutPruning = []
   data = parse.parse(inFile)
+  # for i in range(100):
   for i in range(100):
     random.shuffle(data)
-    train = data[:len(data)/2]
+    train = data[0:len(data)/50]
     valid = data[len(data)/2:3*len(data)/4]
     test = data[3*len(data)/4:]
   
@@ -90,4 +92,4 @@ def testPruningOnHouseData(inFile):
   print "average with pruning",sum(withPruning)/len(withPruning)," without: ",sum(withoutPruning)/len(withoutPruning)
 
 if __name__ == "__main__":
-  testID3AndTest()
+  testPruningOnHouseData("house_votes_84.data")
