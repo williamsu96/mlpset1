@@ -1,7 +1,7 @@
 import ID3, parse, random
 
 def mini_grader():
-  data = [dict(a=1, b=0, Class=0), dict(a=1, b=1, Class=1)]
+  data = [dict(a=1, b=0, Class=1), dict(a=1, b=1, Class=1)]
 
   try:
     tree = ID3.ID3(data, 0)

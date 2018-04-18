@@ -90,4 +90,4 @@ def testPruningOnHouseData(inFile):
   print "average with pruning",sum(withPruning)/len(withPruning)," without: ",sum(withoutPruning)/len(withoutPruning)
 
 if __name__ == "__main__":
-  testID3AndEvaluate()
+  testID3AndTest()

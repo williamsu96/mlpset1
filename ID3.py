@@ -1,6 +1,17 @@
 from node import Node
 import math
 
+def handleMissingAttributes(examples):
+    valueCountSet = {}  # a dictionary of possibleValue : numAppearances
+    for i in range(len(examples)):  # populating valueCountSet
+        for key in examples[i]:
+            if examples[i][key] not in valueCountSet and examples[i][key] != "?":
+                valueCountSet[examples[i][key]] = 0
+
+    for i in range(len(examples)):
+        for key in examples[i]:
+            if examples[i][key] == "?":
+                examples[i][key] = valueCountSet.keys()[0]
 
 def classValueCounter(examples):
     valueCounts = {}
@@ -63,6 +74,7 @@ def ID3(examples, default):
     and the target class variable is a special attribute with the name "Class".
     Any missing attributes are denoted with a value of "?"
     '''
+    handleMissingAttributes(examples)
     notExistsNontrivial = True
     for key in examples[0]:  # columns of the data set
         if key is not "Class":
@@ -129,7 +141,11 @@ def test(node, examples):
     Takes in a trained tree and a test set of examples.  Returns the accuracy (fraction
     of examples the tree classifies correctly).
     '''
-
+    correct = 0
+    for i in range(len(examples)):
+        if evaluate(node,examples[i]) is examples[i]["Class"]:
+            correct = correct + 1
+    return float(correct) / float(len(examples))
 
 def evaluate(node, example):
     '''
