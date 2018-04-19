@@ -13,18 +13,6 @@ def handleMissingAttributes(examples):
             if examples[i][key] == '?':
                 examples[i][key] = valueCountSet[key][0]
 
-    # valueCountSet = {}  # a dictionary of possibleValue : numAppearances
-    # for i in range(len(examples)):  # populating valueCountSet
-    #     for key in examples[i]:
-    #         if examples[i][key] not in valueCountSet and examples[i][key] != '?':
-    #             valueCountSet[examples[i][key]] = 0
-    #
-    # for i in range(len(examples)):
-    #     for key in examples[i]:
-    #         if examples[i][key] == '?':
-    #             examples[i][key] = valueCountSet.keys()[0]
-
-
 def classValueCounter(examples):
     valueCounts = {}
     for example in examples:
@@ -49,9 +37,8 @@ def chooseAttribute(examples):
     infoGains = {}  # dictionary of attribute : infoGain
     hPrior = entropy(examples)
     for key in examples[0]:  # populating the keys with attributes that aren't class
-        if key is not "Class":
+        if key != 'Class':
             infoGains[key] = 0
-
     for key in infoGains:
         valueCountSet = {}  # a dictionary of possibleValue : numAppearances
         for i in range(len(examples)):  # populating valueCountSet
@@ -78,6 +65,15 @@ def chooseAttribute(examples):
             bestAttribute = attribute
     return bestAttribute
 
+def mode(examples):
+    valueCount = classValueCounter(examples)
+    maxKey = ""
+    for key in valueCount:
+        if maxKey == "":
+            maxKey = key
+        elif valueCount[key] > valueCount[maxKey]:
+            maxKey = key
+    return maxKey
 
 def ID3(examples, default):
     '''
@@ -89,37 +85,24 @@ def ID3(examples, default):
     handleMissingAttributes(examples)
     notExistsNontrivial = True
     for key in examples[0]:  # columns of the data set
-        if key is not "Class":
+        if key != 'Class':
             for i in range(len(examples) - 1):  # rows of data set
-                if examples[i][key] == examples[i + 1][key]:
-                    continue
-                else:
+                if examples[i][key] != examples[i + 1][key]:
                     notExistsNontrivial = False
-                    break
     sameClassification = True
     for i in range(len(examples) - 1):
-        if examples[i]["Class"] == examples[i + 1]["Class"]:
-            continue
-        else:
+        if examples[i]["Class"] != examples[i + 1]["Class"]:
             sameClassification = False
-            break
 
-    if examples is None:
+    if len(examples) == 0:
+        node = Node()
+        node.label = default
         return default
     elif sameClassification or notExistsNontrivial:
-        # print("leaf!")
-        valueCount = classValueCounter(examples)
         best = Node()
-        maxKey = ""
-        for key in valueCount:
-            if maxKey is "":
-                maxKey = key
-            elif valueCount[key] > valueCount[maxKey]:
-                maxKey = key
-        best.label = maxKey
+        best.label = mode(examples)
         return best
     else:
-        # print("branch!")
         best = Node()
         best.attribute = chooseAttribute(examples)
         #######################
@@ -134,36 +117,11 @@ def ID3(examples, default):
                 if examples[i][best.attribute] == value:
                     newDataSet.append(examples[i])
 
-            newClassValues = classValueCounter(newDataSet)
-            maxKey = ""
-            for key in newClassValues:
-                if maxKey is "":
-                    maxKey = key
-                elif newClassValues[key] > newClassValues[maxKey]:
-                    maxKey = key
-
-            best.mostCommonClass = maxKey
-            subtree = ID3(newDataSet, default)
+            best.mostCommonClass = mode(newDataSet)
+            subtree = ID3(newDataSet, mode(examples))
             subtree.parent = best
             best.children[value] = subtree
         return best
-
-
-def findLeafNode(node):
-    if len(node.children) is not 0:
-        for child in node.children:
-            return findLeafNode(node.children[child])
-    else:
-        return node
-
-
-# def pruneCheck(currNode, origTree, examples):
-#     pruneTree = node
-#     for child in node.children:
-#         if node.children[child].attribute is not None:
-#             newNode = Node()
-#             newNode.parent = pruneTree
-#             newNode.
 
 def isBottomAttributeNode(node):
     for child in node.children:
@@ -173,67 +131,50 @@ def isBottomAttributeNode(node):
             return False
     return True
 
+def pruneHelp(origTree, currNode, examples):
+    if currNode.attribute is not None:
+        for child in currNode.children:
+            pruneHelp(origTree, currNode.children[child], examples)
+        else:
+            return 0
+    for child in currNode.children:
+        if currNode.children[child].attriute is not None:
+            parentPostPrune = origTree
+            newNode = Node()
+            newNode.label = currNode.mostCommonClass
+            parentPostPrune.children[child] = newNode
+            newNode.parent = parentPostPrune
+            newTree = newNode
+            while newTree.parent is not None:
+                newTree = newTree.parent
+            if test(newTree, examples) > test(origTree, examples):
+                origTree = newTree
+    newTree = origTree
+    newNode = Node()
+
 
 def prune(node, examples):
     '''
     Takes in a trained tree and a validation set of examples.  Prunes nodes in order
     to improve accuracy on the validation data; the precise pruning strategy is up to you.
     '''
-    currNode = node
-
-    if node.attribute is not None:
-        for child in node.children:
-            prune(node.children[child], examples)
-    else:
-        # print("prune")
-        return 0
-
-    for child in node.children:
-        if node.children[child].attribute is not None:
-            parentPostPrune = node
-            newNode = Node()
-            newNode.label = node.mostCommonClass
-            parentPostPrune.children[child] = newNode
-            newNode.parent = parentPostPrune
-            # print("ay" + str(test(parentpostPrune, examples)))
-            if test(parentPostPrune, examples) > test(node, examples):
-                # print("what's poppin")
-                node = parentPostPrune
-
+    pruneHelp(node, node, examples)
     # if node.attribute is not None:
-    #     for child in node.children:
-    #         if isBottomAttributeNode(node.children[child]):
-    #             parentPostPrune = node
-    #             newNode = Node()
-    #             newNode.label = node.children[child].mostCommonClass
-    #             newNode.parent = node
-    #             parentPostPrune.children[child] = newNode
-    #         elif hasAttributeNode(node.children[child]):
-    #             prune(node.children[child])
-    #         else:
-    #             return node
-    # else:
-    #     return node
-
-    # if node.attribute is not None and not isBottomAttributeNode(node):
     #     for child in node.children:
     #         prune(node.children[child], examples)
     # else:
+    #     return 0
+    #
+    # for child in node.children:
+    #     if node.children[child].attribute is not None:
+    #         parentPostPrune = node
+    #         newNode = Node()
+    #         newNode.label = node.mostCommonClass
+    #         parentPostPrune.children[child] = newNode
+    #         newNode.parent = parentPostPrune
+    #         if test(parentPostPrune, examples) > test(node, examples):
+    #             node = parentPostPrune
 
-    # leafNode = findLeafNode(node)
-    # currNode = leafNode
-    # prunedTree = node
-    # if currNode.attribute is None and currNode.parent is not None:
-    #     currNode = currNode.parent
-    # else:
-    #     print("hello!")
-    #     for child in currNode.children:
-    #         if prunedTree.children[child].attribute is not None:
-    #             newNode = Node()
-    #             newNode.parent = currNode
-    #             newNode.label = prunedTree.children[child].mostCommonClass
-    #             prunedTree.children[child] = newNode
-    #             print(test(prunedTree,examples))
 
 
 def test(node, examples):
@@ -243,7 +184,6 @@ def test(node, examples):
     '''
     correct = 0
     for i in range(len(examples)):
-        # print(evaluate(node, examples[i]) + " " + examples[i]["Class"])
         if evaluate(node, examples[i]) == examples[i]["Class"]:
             correct = correct + 1
     return float(correct) / float(len(examples))
@@ -254,7 +194,10 @@ def evaluate(node, example):
     Takes in a tree and one example.  Returns the Class value that the tree
     assigns to the example.
     '''
-    # handleMissingAttributes([example])
+    for key in example:
+        if example[key] == '?':
+            example[key] = valueCountSet[key][0]
+
     if len(node.children) != 0:
         return evaluate(node.children[example[node.attribute]], example)
     else:

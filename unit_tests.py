@@ -63,10 +63,15 @@ def testPruningOnHouseData(inFile):
   # for i in range(100):
   for i in range(100):
     random.shuffle(data)
-    train = data[0:len(data)/50]
-    valid = data[len(data)/2:3*len(data)/4]
-    test = data[3*len(data)/4:]
-  
+    trainingSize = 300
+    validSize = 50
+    validIndex = trainingSize + validSize
+    # train = data[0:len(data)/2]
+    train = data[0:trainingSize]
+    # valid = data[len(data)/2:3*len(data)/4]
+    valid = data[trainingSize:validIndex]
+    test = data[validIndex:]
+
     tree = ID3.ID3(train, 'democrat')
     acc = ID3.test(tree, train)
     print "training accuracy: ",acc
@@ -74,7 +79,7 @@ def testPruningOnHouseData(inFile):
     print "validation accuracy: ",acc
     acc = ID3.test(tree, test)
     print "test accuracy: ",acc
-  
+
     ID3.prune(tree, valid)
     acc = ID3.test(tree, train)
     print "pruned tree train accuracy: ",acc
@@ -87,9 +92,12 @@ def testPruningOnHouseData(inFile):
     acc = ID3.test(tree, test)
     print "no pruning test accuracy: ",acc
     withoutPruning.append(acc)
-  print withPruning
-  print withoutPruning
+  # print withPruning
+  # print withoutPruning
   print "average with pruning",sum(withPruning)/len(withPruning)," without: ",sum(withoutPruning)/len(withoutPruning)
 
 if __name__ == "__main__":
   testPruningOnHouseData("house_votes_84.data")
+  # testID3AndTest()
+  # testPruning()
+  # testID3AndEvaluate()
